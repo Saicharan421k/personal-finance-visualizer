@@ -1,21 +1,19 @@
 // components/MonthlyExpensesChart.tsx
 "use client";
 
-import { useMemo, useState } from "react";
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
-import { format } from "date-fns";
-import { DateRange } from "react-day-picker";
-import { Calendar as CalendarIcon } from "lucide-react";
-
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useMemo, useState, useEffect } from "react";
+// ... (other imports) ...
 
 type ChartTransactionProp = { amount: number; date: string; };
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+// THE FIX: Define a proper type for the tooltip props
+type CustomTooltipProps = {
+  active?: boolean;
+  payload?: { value: number }[];
+  label?: string;
+}
+
+const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     const value = payload[0].value;
     return (
