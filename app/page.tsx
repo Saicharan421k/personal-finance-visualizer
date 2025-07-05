@@ -1,103 +1,162 @@
-import Image from "next/image";
+// app/page.tsx
+"use client";
 
-export default function Home() {
+import { useState, useEffect, useMemo } from "react";
+import { format, subMonths } from "date-fns";
+import { DateRange } from "react-day-picker";
+import { Calendar as CalendarIcon } from "lucide-react";
+
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+
+import { TransactionForm } from "@/components/TransactionForm";
+import { TransactionList } from "@/components/TransactionList";
+import { CategoryPieChart } from "@/components/CategoryPieChart";
+import { MonthlyExpensesChart } from "@/components/MonthlyExpensesChart";
+import { BudgetDialog } from "@/components/BudgetDialog";
+import { BudgetComparisonChart } from "@/components/BudgetComparisonChart";
+import { SpendingInsights } from "@/components/SpendingInsights";
+
+type ClientTransaction = { _id: string; amount: number; date: string; description: string; category: string; };
+type ClientBudget = { _id:string; amount: number; category: string; month: string; };
+
+const getLast12Months = () => {
+  const months = [];
+  let currentDate = new Date();
+  for (let i = 0; i < 12; i++) {
+    months.push(format(currentDate, "yyyy-MM"));
+    currentDate = subMonths(currentDate, 1);
+  }
+  return months;
+};
+
+export default function DashboardPage() {
+  const [allTransactions, setAllTransactions] = useState<ClientTransaction[]>([]);
+  const [budgets, setBudgets] = useState<ClientBudget[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  const [chartDateRange, setChartDateRange] = useState<DateRange | undefined>();
+  const [viewedMonth, setViewedMonth] = useState(format(new Date(), "yyyy-MM"));
+
+  const fetchBudgets = async () => {
+    try {
+      const response = await fetch(`/api/budgets?month=${viewedMonth}`);
+      if (!response.ok) throw new Error("Budget fetch failed");
+      const budgetData = await response.json();
+      if (budgetData.success) setBudgets(budgetData.data);
+    } catch (error) { console.error("Failed to fetch budgets:", error); }
+  };
+
+  useEffect(() => {
+    // THE FIX: Fetch data more resiliently, not inside a Promise.all
+    async function fetchAllData() {
+      setIsLoading(true);
+      try {
+        const transRes = await fetch("/api/transactions");
+        if (!transRes.ok) throw new Error("Transaction fetch failed");
+        const transData = await transRes.json();
+        if (transData.success) setAllTransactions(transData.data);
+      } catch (error) { console.error("Error fetching transactions:", error); }
+      
+      await fetchBudgets(); // Fetch budgets using the dedicated function
+      setIsLoading(false);
+    }
+    fetchAllData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewedMonth]);
+
+  const pieChartData = useMemo(() => {
+    if (!chartDateRange?.from) return allTransactions;
+    return allTransactions.filter(t => {
+      const transactionDate = new Date(t.date);
+      return transactionDate >= chartDateRange.from! && transactionDate <= (chartDateRange.to || chartDateRange.from!);
+    });
+  }, [allTransactions, chartDateRange]);
+
+  const budgetComparisonData = useMemo(() => {
+    const monthlyTransactions = allTransactions.filter(t => format(new Date(t.date), 'yyyy-MM') === viewedMonth);
+    return budgets.map(budget => {
+      const actualSpending = monthlyTransactions.filter(t => t.category === budget.category).reduce((sum, t) => sum + t.amount, 0);
+      return { category: budget.category, budget: budget.amount, actual: actualSpending };
+    }).filter(b => b.budget > 0 || b.actual > 0);
+  }, [allTransactions, budgets, viewedMonth]);
+
+  const totalLifetimeExpenses = allTransactions.reduce((sum, t) => sum + t.amount, 0);
+  const totalLifetimeTransactions = allTransactions.length;
+  const monthLabel = format(new Date(viewedMonth + "-02"), "MMMM yyyy");
+
+  if (isLoading) {
+    // A more descriptive loading state
+    return <div className="container mx-auto p-8"><h1 className="text-2xl font-bold">Loading your financial dashboard...</h1></div>;
+  }
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="min-h-screen bg-muted/40">
+      <main className="container mx-auto p-4 py-8 md:p-8">
+        <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+            <p className="text-muted-foreground">Displaying budgets and insights for: {monthLabel}</p>
+          </div>
+          <BudgetDialog month={viewedMonth} onBudgetSet={fetchBudgets} />
         </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-1"><Card className="h-full"><CardHeader><CardTitle>Add a Transaction</CardTitle></CardHeader><CardContent><TransactionForm /></CardContent></Card></div>
+          <div className="lg:col-span-1 space-y-8">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div><CardTitle>Category Breakdown</CardTitle><CardDescription>Spending by category.</CardDescription></div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button id="date" variant={"outline"} className={cn("w-[240px] justify-start text-left font-normal", !chartDateRange && "text-muted-foreground")}>
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {chartDateRange?.from ? (chartDateRange.to ? (<>{format(chartDateRange.from, "LLL dd, y")} - {format(chartDateRange.to, "LLL dd, y")}</>) : (format(chartDateRange.from, "LLL dd, y"))) : (<span>All Transactions</span>)}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="end"><Calendar initialFocus mode="range" selected={chartDateRange} onSelect={setChartDateRange} numberOfMonths={2} /></PopoverContent>
+                </Popover>
+              </CardHeader>
+              <CardContent className="h-[300px]"><CategoryPieChart data={pieChartData} /></CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div><CardTitle>Budget vs. Actual</CardTitle><CardDescription>Spending for the selected month.</CardDescription></div>
+                <Select value={viewedMonth} onValueChange={setViewedMonth}>
+                  <SelectTrigger className="w-[160px]"><SelectValue placeholder="Select Month" /></SelectTrigger>
+                  <SelectContent>{getLast12Months().map(m => <SelectItem key={m} value={m}>{format(new Date(m + "-02"), "MMM yyyy")}</SelectItem>)}</SelectContent>
+                </Select>
+              </CardHeader>
+              <CardContent><BudgetComparisonChart data={budgetComparisonData} /></CardContent>
+            </Card>
+          </div>
+          <div className="lg:col-span-1 space-y-8">
+            <Card>
+              <CardHeader><CardTitle>All-Time Stats</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <div><p className="text-sm text-muted-foreground">Total Lifetime Expenses</p><p className="text-2xl font-bold">${totalLifetimeExpenses.toFixed(2)}</p></div>
+                <div><p className="text-sm text-muted-foreground">Total Lifetime Transactions</p><p className="text-2xl font-bold">{totalLifetimeTransactions}</p></div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader><CardTitle>Spending Insights</CardTitle><CardDescription>For {monthLabel}</CardDescription></CardHeader>
+              <CardContent><SpendingInsights data={budgetComparisonData} /></CardContent>
+            </Card>
+          </div>
+        </div>
+        
+        {/* THE FIX: Bar graph is restored here */}
+        <div className="mt-8">
+          <MonthlyExpensesChart data={allTransactions} />
+        </div>
+
+        <div className="mt-8"><Card><CardHeader><CardTitle>Full Transaction History</CardTitle></CardHeader><CardContent><TransactionList initialTransactions={allTransactions} /></CardContent></Card></div>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
     </div>
   );
 }
