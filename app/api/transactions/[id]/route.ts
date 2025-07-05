@@ -1,23 +1,20 @@
-// app/api/transactions/[id]/route.ts
-import { NextResponse } from 'next/server';
+// THIS IS THE LIKELY FAILING CODE
+import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/dbConnect';
 import Transaction from '@/models/Transaction';
 
-// THE FIX IS HERE: The function signature is corrected.
-export async function PUT(
-  request: Request,
-  context: { params: { id: string } }
-) {
+// Incorrect function signature - missing the second 'context' argument
+export async function PUT(request: NextRequest) {
   try {
     await dbConnect();
     const body = await request.json();
     
-    // THE FIX IS HERE: We use context.params.id
-    const transaction = await Transaction.findByIdAndUpdate(context.params.id, body, {
+    // ERROR HERE: Trying to get 'id' from the request search params, which is wrong
+    const id = request.nextUrl.searchParams.get("id"); 
+    const transaction = await Transaction.findByIdAndUpdate(id, body, {
       new: true,
       runValidators: true,
     });
-
     if (!transaction) {
       return NextResponse.json({ success: false, error: 'Transaction not found' }, { status: 404 });
     }
@@ -25,20 +22,17 @@ export async function PUT(
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
     return NextResponse.json({ success: false, error: errorMessage }, { status: 400 });
-  }
+  } //...
 }
 
-// THE FIX IS HERE: The function signature is corrected.
-export async function DELETE(
-  request: Request,
-  context: { params: { id: string } }
-) {
+// Incorrect function signature - missing 'context'
+export async function DELETE(request: NextRequest) {
   try {
     await dbConnect();
 
-    // THE FIX IS HERE: We use context.params.id
-    const deletedTransaction = await Transaction.deleteOne({ _id: context.params.id });
-
+    // ERROR HERE: Same problem as above
+    const id = request.nextUrl.searchParams.get("id");
+    const deletedTransaction = await Transaction.deleteOne({ _id: id });
     if (deletedTransaction.deletedCount === 0) {
       return NextResponse.json({ success: false, error: 'Transaction not found' }, { status: 404 });
     }
@@ -46,5 +40,32 @@ export async function DELETE(
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
     return NextResponse.json({ success: false, error: errorMessage }, { status: 400 });
-  }
+  } // ...
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
