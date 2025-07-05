@@ -3,8 +3,7 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/dbConnect';
 import Transaction from '@/models/Transaction';
 
-// THE FIX: The type of the second argument has been changed from destructuring
-// to a single `context` object.
+// THE FIX IS HERE: The function signature is corrected.
 export async function PUT(
   request: Request,
   context: { params: { id: string } }
@@ -13,7 +12,7 @@ export async function PUT(
     await dbConnect();
     const body = await request.json();
     
-    // THE FIX: We now access `id` via `context.params.id`
+    // THE FIX IS HERE: We use context.params.id
     const transaction = await Transaction.findByIdAndUpdate(context.params.id, body, {
       new: true,
       runValidators: true,
@@ -24,11 +23,12 @@ export async function PUT(
     }
     return NextResponse.json({ success: true, data: transaction });
   } catch (error) {
-    return NextResponse.json({ success: false, error }, { status: 400 });
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+    return NextResponse.json({ success: false, error: errorMessage }, { status: 400 });
   }
 }
 
-// THE FIX: The same change is applied to the DELETE function's signature.
+// THE FIX IS HERE: The function signature is corrected.
 export async function DELETE(
   request: Request,
   context: { params: { id: string } }
@@ -36,7 +36,7 @@ export async function DELETE(
   try {
     await dbConnect();
 
-    // THE FIX: We now access `id` via `context.params.id`
+    // THE FIX IS HERE: We use context.params.id
     const deletedTransaction = await Transaction.deleteOne({ _id: context.params.id });
 
     if (deletedTransaction.deletedCount === 0) {
@@ -44,6 +44,7 @@ export async function DELETE(
     }
     return NextResponse.json({ success: true, data: {} });
   } catch (error) {
-    return NextResponse.json({ success: false, error }, { status: 400 });
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+    return NextResponse.json({ success: false, error: errorMessage }, { status: 400 });
   }
 }
