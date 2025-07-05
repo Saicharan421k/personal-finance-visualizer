@@ -1,15 +1,14 @@
-</details>
-
-<details>
-<summary><code>components/SpendingInsights.tsx</code> (Click to expand)</summary>
-```tsx
 // components/SpendingInsights.tsx
 "use client";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, TrendingUp, Wallet } from "lucide-react";
 
-type InsightData = { category: string; budget: number; actual: number; };
+type InsightData = {
+  category: string;
+  budget: number;
+  actual: number;
+};
 
 type Insight = {
   type: "destructive" | "warning";
@@ -22,11 +21,22 @@ export function SpendingInsights({ data }: { data: InsightData[] }) {
   const insights: Insight[] = data.map(item => {
     const overspent = item.actual > item.budget;
     const nearingLimit = !overspent && item.budget > 0 && item.actual / item.budget >= 0.9;
+    
     if (overspent) {
-      return { type: "destructive", title: `Over Budget in ${item.category}`, description: `You've spent $${(item.actual - item.budget).toFixed(2)} more than your budget.`, icon: <AlertCircle className="h-4 w-4" /> };
+      return {
+        type: "destructive",
+        title: `Over Budget in ${item.category}`,
+        description: `You've spent $${(item.actual - item.budget).toFixed(2)} more than your budget.`,
+        icon: <AlertCircle className="h-4 w-4" />
+      };
     }
     if (nearingLimit) {
-      return { type: "warning", title: `Nearing Budget in ${item.category}`, description: `You've spent over 90% of your budget. $${(item.budget - item.actual).toFixed(2)} remaining.`, icon: <TrendingUp className="h-4 w-4" /> };
+      return {
+        type: "warning",
+        title: `Nearing Budget in ${item.category}`,
+        description: `You've spent over 90% of your budget. $${(item.budget - item.actual).toFixed(2)} remaining.`,
+        icon: <TrendingUp className="h-4 w-4" />
+      };
     }
     return null;
   }).filter(Boolean) as Insight[];
