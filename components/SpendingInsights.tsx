@@ -26,7 +26,7 @@ export function SpendingInsights({ data }: { data: InsightData[] }) {
       return {
         type: "destructive",
         title: `Over Budget in ${item.category}`,
-        description: `You've spent $${(item.actual - item.budget).toFixed(2)} more than your budget.`,
+        description: `You have spent $${(item.actual - item.budget).toFixed(2)} more than your budget.`,
         icon: <AlertCircle className="h-4 w-4" />
       };
     }
@@ -34,7 +34,7 @@ export function SpendingInsights({ data }: { data: InsightData[] }) {
       return {
         type: "warning",
         title: `Nearing Budget in ${item.category}`,
-        description: `You've spent over 90% of your budget. $${(item.budget - item.actual).toFixed(2)} remaining.`,
+        description: `You have spent over 90% of your budget. $${(item.budget - item.actual).toFixed(2)} remaining.`,
         icon: <TrendingUp className="h-4 w-4" />
       };
     }
@@ -47,7 +47,7 @@ export function SpendingInsights({ data }: { data: InsightData[] }) {
         <Wallet className="h-4 w-4" />
         <AlertTitle>All Good!</AlertTitle>
         {/* THIS IS THE ONLY LINE THAT MATTERS FOR THE ERROR. IT MUST BE EXACTLY LIKE THIS. */}
-        <AlertDescription>You're staying within your budget limits for all categories.</AlertDescription>
+        <AlertDescription>You are staying within your budget limits for all categories.</AlertDescription>
       </Alert>
     );
   }
