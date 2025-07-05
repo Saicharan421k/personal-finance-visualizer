@@ -11,7 +11,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 import { TransactionForm } from "@/components/TransactionForm";
@@ -24,6 +23,7 @@ import { SpendingInsights } from "@/components/SpendingInsights";
 
 type ClientTransaction = { _id: string; amount: number; date: string; description: string; category: string; };
 type ClientBudget = { _id:string; amount: number; category: string; month: string; };
+
 
 const getLast12Months = () => {
   const months = [];
