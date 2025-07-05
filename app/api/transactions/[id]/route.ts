@@ -3,14 +3,22 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/dbConnect';
 import Transaction from '@/models/Transaction';
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+// THE FIX: The type of the second argument has been changed from destructuring
+// to a single `context` object.
+export async function PUT(
+  request: Request,
+  context: { params: { id: string } }
+) {
   try {
     await dbConnect();
     const body = await request.json();
-    const transaction = await Transaction.findByIdAndUpdate(params.id, body, {
+    
+    // THE FIX: We now access `id` via `context.params.id`
+    const transaction = await Transaction.findByIdAndUpdate(context.params.id, body, {
       new: true,
       runValidators: true,
     });
+
     if (!transaction) {
       return NextResponse.json({ success: false, error: 'Transaction not found' }, { status: 404 });
     }
@@ -20,10 +28,17 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+// THE FIX: The same change is applied to the DELETE function's signature.
+export async function DELETE(
+  request: Request,
+  context: { params: { id: string } }
+) {
   try {
     await dbConnect();
-    const deletedTransaction = await Transaction.deleteOne({ _id: params.id });
+
+    // THE FIX: We now access `id` via `context.params.id`
+    const deletedTransaction = await Transaction.deleteOne({ _id: context.params.id });
+
     if (deletedTransaction.deletedCount === 0) {
       return NextResponse.json({ success: false, error: 'Transaction not found' }, { status: 404 });
     }
