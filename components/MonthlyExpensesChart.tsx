@@ -1,12 +1,20 @@
 // components/MonthlyExpensesChart.tsx
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
-// ... (other imports) ...
+// THE FIX: This entire block of imports was missing or incomplete.
+import { useMemo, useState } from "react";
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
+import { format } from "date-fns";
+import { DateRange } from "react-day-picker";
+import { Calendar as CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 type ChartTransactionProp = { amount: number; date: string; };
 
-// THE FIX: Define a proper type for the tooltip props
 type CustomTooltipProps = {
   active?: boolean;
   payload?: { value: number }[];
