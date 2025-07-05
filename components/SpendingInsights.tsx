@@ -46,10 +46,7 @@ export function SpendingInsights({ data }: { data: InsightData[] }) {
       <Alert>
         <Wallet className="h-4 w-4" />
         <AlertTitle>All Good!</AlertTitle>
-        {/*
-          THIS IS THE FIX: The apostrophe in "You're" is replaced with "'"
-          This is the only line causing the build to fail.
-        */}
+        {/* THIS IS THE ONLY LINE THAT MATTERS FOR THE ERROR. IT MUST BE EXACTLY LIKE THIS. */}
         <AlertDescription>You're staying within your budget limits for all categories.</AlertDescription>
       </Alert>
     );
