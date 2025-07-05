@@ -4,14 +4,18 @@
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { useState, useEffect } from 'react';
 
-type ChartData = {
-  category: string;
-  budget: number;
-  actual: number;
-};
+type ChartData = { category: string; budget: number; actual: number; };
 
-// Tooltip now gets the computed color as a prop
-const CustomTooltip = ({ active, payload, label, primaryColor, mutedColor }: any) => {
+// THE FIX: Define a proper type for the tooltip props
+type CustomTooltipProps = {
+  active?: boolean;
+  payload?: { value: number }[];
+  label?: string;
+  primaryColor?: string;
+  mutedColor?: string;
+}
+
+const CustomTooltip = ({ active, payload, label, primaryColor, mutedColor }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     return (
       <div className="rounded-lg border bg-background p-2 shadow-sm">
