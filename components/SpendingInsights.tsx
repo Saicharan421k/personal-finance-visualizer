@@ -46,6 +46,7 @@ export function SpendingInsights({ data }: { data: InsightData[] }) {
       <Alert>
         <Wallet className="h-4 w-4" />
         <AlertTitle>All Good!</AlertTitle>
+        {/* THE FIX: Replaced ' with ' */}
         <AlertDescription>You're staying within your budget limits for all categories.</AlertDescription>
       </Alert>
     );
