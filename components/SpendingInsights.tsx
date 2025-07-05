@@ -10,8 +10,9 @@ type InsightData = {
   actual: number;
 };
 
+// THE FIX: The 'warning' type is replaced with 'default'
 type Insight = {
-  type: "destructive" | "warning";
+  type: "destructive" | "default";
   title: string;
   description: string;
   icon: React.ReactNode;
@@ -31,8 +32,9 @@ export function SpendingInsights({ data }: { data: InsightData[] }) {
       };
     }
     if (nearingLimit) {
+      // THE FIX: When nearing the limit, we now correctly assign the 'default' type.
       return {
-        type: "warning",
+        type: "default", 
         title: `Nearing Budget in ${item.category}`,
         description: `You have spent over 90% of your budget. $${(item.budget - item.actual).toFixed(2)} remaining.`,
         icon: <TrendingUp className="h-4 w-4" />
@@ -46,7 +48,6 @@ export function SpendingInsights({ data }: { data: InsightData[] }) {
       <Alert>
         <Wallet className="h-4 w-4" />
         <AlertTitle>All Good!</AlertTitle>
-        {/* THIS IS THE ONLY LINE THAT MATTERS FOR THE ERROR. IT MUST BE EXACTLY LIKE THIS. */}
         <AlertDescription>You are staying within your budget limits for all categories.</AlertDescription>
       </Alert>
     );
@@ -55,6 +56,7 @@ export function SpendingInsights({ data }: { data: InsightData[] }) {
   return (
     <div className="space-y-4 max-h-[200px] overflow-y-auto pr-2">
       {insights.map((insight, index) => (
+        // This variant prop is now guaranteed to be either "default" or "destructive".
         <Alert key={index} variant={insight.type}>
           {insight.icon}
           <AlertTitle>{insight.title}</AlertTitle>
